@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ELETOY — Amateur Radio & Embedded Electronics</title>
+<meta name="description" content="ELETOY 业余无线电与嵌入式电子产品：产品资料、使用手册与最新动态。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ef5322'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='18' font-weight='700' fill='%23fff' text-anchor='middle'%3EE%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#0e1826; --ink-soft:#24313f; --paper:#fff; --panel:#f5f7f9;
+    --line:#dce2e9; --muted:#5b6672; --accent:#ef5322; --data:#0e7490; --data-ink:#0b5563;
+    --mono:ui-monospace,"SFMono-Regular","Cascadia Code","Roboto Mono","DejaVu Sans Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    --maxw:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth; scroll-padding-top:70px}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--data-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  img{max-width:100%;height:auto;display:block}
+
+  /* 读数标签（品牌标志性小字） */
+  .readout{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+  /* 页头 */
+  header.site{position:sticky;top:0;z-index:10;background:var(--paper);border-bottom:1px solid var(--line)}
+  header.site .bar{max-width:var(--maxw);margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:28px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.04em;color:var(--ink);font-size:1.1rem}
+  .brand:hover{text-decoration:none}
+  .brand .dot{width:26px;height:26px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#fff;font-family:var(--mono);font-size:.8rem;font-weight:700}
+  nav.top{display:flex;gap:22px;margin-left:auto}
+  nav.top a{font-family:var(--mono);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+
+  main{max-width:var(--maxw);margin:0 auto;padding:40px 20px 72px}
+
+  /* Hero */
+  .hero{border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--panel);padding:30px 28px;border-radius:4px}
+  .hero h1{font-size:clamp(1.8rem,4.5vw,2.6rem);margin:10px 0 10px;letter-spacing:-.01em}
+  .hero p{margin:0;max-width:60ch;color:var(--ink-soft)}
+
+  /* 分区标题 */
+  .section-label{display:flex;align-items:center;gap:12px;margin:52px 0 18px}
+  .section-label h2{font-size:1.15rem;margin:0}
+  .section-label .rule{flex:1;height:1px;background:var(--line)}
+
+  /* 卡片网格 */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+  .card{border:1px solid var(--line);border-radius:4px;background:var(--paper);overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s ease,transform .15s ease}
+  .card:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .card .thumb{aspect-ratio:16/10;background:var(--panel);border-bottom:1px solid var(--line);display:grid;place-items:center;overflow:hidden}
+  .card .thumb img{width:100%;height:100%;object-fit:cover}
+  .card .thumb .ph{font-family:var(--mono);color:var(--line);font-size:2rem}
+  .card .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px}
+  .card .meta{display:flex;gap:12px;flex-wrap:wrap}
+  .card h3{font-size:1.05rem;margin:0;line-height:1.35}
+  .card p{color:var(--muted);font-size:.9rem;margin:0}
+  .card .links{margin-top:4px;display:flex;gap:16px}
+  .card .links a{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase}
+
+  footer.site{border-top:1px solid var(--line);background:var(--panel);color:var(--muted)}
+  footer.site .bar{max-width:var(--maxw);margin:0 auto;padding:26px 20px;display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;font-size:.85rem}
+
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ===================== 页头（导航） ===================== -->
+<header class="site">
+  <div class="bar">
+    <a class="brand" href="#home"><span class="dot">E</span>ELETOY</a>
+    <nav class="top" aria-label="主导航">
+      <a href="#home">Home</a>
+      <a href="#products">Products</a>
+      <a href="#news">News</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===================== 首页 Hero ===================== -->
+  <section id="home" class="hero">
+    <span class="readout">ELETOY · Amateur Radio Gear</span>
+    <h1>Welcome to my electronic toy website!</h1>
+    <p>业余无线电与嵌入式电子产品。产品资料、使用手册和最新动态都在下面。</p>
+  </section>
+
+  <!-- ===================== 产品区 ===================== -->
+  <div class="section-label">
+    <h2>Products</h2>
+    <span class="rule"></span>
+  </div>
+
+  <section id="products" class="grid">
+
+    <!-- ↓↓↓ 复制下面这一整块 <article>…</article> 就能新增一个产品 ↓↓↓ -->
+    <article class="card">
+      <div class="thumb">
+        <!-- 图片放进 images/ 文件夹，改这里的文件名即可；没图会自动显示占位框 -->
+        <img src="images/ps100.png" alt="PS-100 SWR Meter" loading="lazy"
+             onerror="this.style.display='none';this.parentElement.innerHTML='<span class=&quot;ph&quot;>◻</span>'">
+      </div>
+      <div class="body">
+        <span class="readout">SWR / Power Meter</span>
+        <h3>PS-100 HF Power/SWR Meter</h3>
+        <p>紧凑型 HF 功率/驻波比测量表，OLED 显示，USB-C 供电，内置电池。</p>
+        <div class="links">
+          <a href="https://docs.eletoy.cc/PS100/" target="_blank" rel="noopener">手册 / Docs →</a>
+        </div>
+      </div>
+    </article>
+    <!-- ↑↑↑ 复制到这里为止 ↑↑↑ -->
+
+    <article class="card">
+      <div class="thumb">
+        <img src="images/audio2rig.png" alt="AUDIO2RIG" loading="lazy"
+             onerror="this.style.display='none';this.parentElement.innerHTML='<span class=&quot;ph&quot;>◻</span>'">
+      </div>
+      <div class="body">
+        <span class="readout">USB Sound Card + PTT</span>
+        <h3>AUDIO2RIG USB Sound Card Connector</h3>
+        <p>电脑与电台之间的音频/PTT 转换接口，变压器 + 光耦隔离，兼容 Kenwood、Yaesu、ICOM，支持 VOX PTT。</p>
+        <div class="links">
+          <a href="https://eletoy.cc" target="_blank" rel="noopener">购买 / Buy →</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="thumb">
+        <img src="images/usb2rig.png" alt="USB2RIG V2" loading="lazy"
+             onerror="this.style.display='none';this.parentElement.innerHTML='<span class=&quot;ph&quot;>◻</span>'">
+      </div>
+      <div class="body">
+        <span class="readout">Data Comm Interface</span>
+        <h3>USB2RIG V2</h3>
+        <p>面向 HAM 数字通信的 USB 接口设备。</p>
+        <div class="links">
+          <a href="https://eletoy.cc" target="_blank" rel="noopener">详情 / More →</a>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- ===================== 新闻区 ===================== -->
+  <div class="section-label">
+    <h2>News</h2>
+    <span class="rule"></span>
+  </div>
+
+  <section id="news" class="grid">
+
+    <!-- ↓↓↓ 复制下面这一整块 <article>…</article> 就能新增一条新闻 ↓↓↓ -->
+    <article class="card">
+      <div class="thumb">
+        <img src="images/ps100-news.png" alt="PS100 SWR Meter" loading="lazy"
+             onerror="this.style.display='none';this.parentElement.innerHTML='<span class=&quot;ph&quot;>◻</span>'">
+      </div>
+      <div class="body">
+        <span class="meta"><span class="readout">News</span><span class="readout">2026-07-06</span></span>
+        <h3>PS100 SWR METER</h3>
+        <p>PS-100 的 Web 工具即将上线，支持 Android 与 PC。</p>
+        <div class="links">
+          <a href="https://docs.eletoy.cc/PS100/" target="_blank" rel="noopener">阅读 / Read →</a>
+        </div>
+      </div>
+    </article>
+    <!-- ↑↑↑ 复制到这里为止 ↑↑↑ -->
+
+  </section>
+
+</main>
+
+<!-- ===================== 页脚 ===================== -->
+<footer class="site">
+  <div class="bar">
+    <span>© 2026 ELETOY</span>
+    <span class="readout">Amateur Radio · Embedded Electronics</span>
+  </div>
+</footer>
+
+</body>
+</html>
