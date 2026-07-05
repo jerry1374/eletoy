@@ -18,7 +18,6 @@ Connector: Dual 3.5mm 4PIN plugs Voltage
 
 Output: 3.3V (e.g., for LAB599 TX500)
 
-  
 **Features:**
 
 1）2-in-1 Design: Combines audio and serial control interfaces for seamless radio connectivity.
@@ -31,5 +30,4 @@ Output: 3.3V (e.g., for LAB599 TX500)
 
 5）Flexible Power Option: Provides 3.3V output to power devices like LAB599 TX500.
 
-  
 **Package Included:** 1 x USB2RIG V2 Radio USB Sound Card Adapter
