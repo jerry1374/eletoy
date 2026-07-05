@@ -3,18 +3,18 @@ interface Props {
   href: string;
   title: string;
   date?: Date;
-  cover?: string;
+  image?: string;
   summary?: string;
   tag?: string;
 }
-const { href, title, date, cover, summary, tag } = Astro.props;
+const { href, title, date, image, summary, tag } = Astro.props;
 const dateStr = date
   ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
   : undefined;
 ---
 <a class="card" href={href}>
   <div class="thumb">
-    {cover ? <img src={cover} alt={title} loading="lazy" /> : <span class="ph">◻</span>}
+    {image ? <img src={image} alt={title} loading="lazy" /> : <span class="ph">◻</span>}
   </div>
   <div class="body">
     <div class="meta">

@@ -6,7 +6,7 @@ import { glob } from 'astro/loaders';
 const meta = z.object({
   title: z.string().optional(),
   date: z.coerce.date().optional(),
-  cover: z.string().optional(),
+  image: z.string().optional(),
   summary: z.string().optional(),
   draft: z.boolean().optional(),
 });

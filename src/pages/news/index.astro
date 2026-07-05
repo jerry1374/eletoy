@@ -19,7 +19,7 @@ const items = (await getCollection('news'))
           href={`/news/${e.id}/`}
           title={e.data.title ?? e.id}
           date={e.data.date}
-          cover={e.data.cover}
+          image={e.data.image}
           summary={e.data.summary}
           tag="News"
         />
