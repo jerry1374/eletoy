@@ -1,6 +1,6 @@
 media:
-  input: assets/images
-  output: assets/images
+  input: public/images
+  output: /images
 content:
   - name: news
     label: 新闻
