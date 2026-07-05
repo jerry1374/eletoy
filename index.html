@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#1b1d22">
+<title>PS-100 Tool Web</title>
+<style>
+  :root{--bg:#eef1f7;--card:#ffffff;--fg:#1a1a1a;--sub:#5f6470;--accent:#0067c0;
+    --good:#0f7b0f;--warn:#9d5d00;--bad:#c42b1c;--border:#d4dae6;--track:#e6ecf5;}
+  @media (prefers-color-scheme: dark){:root{--bg:#1b1d22;--card:#2b2f37;--fg:#f2f2f2;--sub:#9aa0b0;
+    --accent:#4cc2ff;--good:#6ccb5f;--warn:#d8a657;--bad:#ff99a4;--border:#3a3f49;--track:#23262e;}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:14px}
+  header{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:700}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--bad);display:inline-block}
+  .dot.on{background:var(--good)} .status{color:var(--sub);font-size:13px}.spacer{flex:1}
+  .chg{color:var(--good);font-size:13px;font-weight:600}
+  button,select,input{font:inherit}
+  button,select{border:1px solid var(--border);background:var(--card);color:var(--fg);padding:9px 13px;border-radius:10px;cursor:pointer}
+  button:active{transform:translateY(1px)} button:disabled{opacity:.45}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  button.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+  @media (prefers-color-scheme: dark){button.primary,button.sel{color:#10223f}}
+  #langBtn{padding:7px 11px}
+  .tabs{display:flex;gap:6px;margin-bottom:12px}
+  .tabs button{flex:1;padding:10px;font-size:14px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px}
+  .card h2{font-size:14px;margin:0 0 10px;font-weight:600}
+  .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+  .tile{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center}
+  .tile .val{font-size:32px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+  .tile .lab{color:var(--sub);font-size:13px;margin-top:4px} .tile.wide{grid-column:1/-1}
+  .tile.alarm{outline:3px solid var(--bad)}
+  .barwrap{height:24px;background:var(--track);border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+  .bar{height:100%;width:0;background:var(--accent);transition:width .12s linear}
+  .scale{position:relative;height:34px;margin-top:6px}
+  .scale .line{position:absolute;left:0;right:0;top:16px;height:2px;background:var(--border)}
+  .scale .tick{position:absolute;top:6px;font-size:13px;font-weight:600;color:var(--sub);transform:translateX(-50%)}
+  .scale .mark{position:absolute;top:6px;width:3px;height:20px;background:var(--good);border-radius:2px;transition:left .12s}
+  .seg{display:flex;gap:6px}.seg button{padding:6px 10px;font-size:13px}
+  .setgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .setitem{display:flex;flex-direction:column;gap:6px}
+  .setitem .ctl{display:flex;gap:8px;align-items:center}
+  .setitem input{flex:1;min-width:0;width:auto}
+  .setitem button{white-space:nowrap;padding:8px 10px}
+  input[type=text],input[type=number]{background:var(--card);color:var(--fg);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
+  label.lbl{color:var(--sub);font-size:13px}
+  canvas{width:100%;display:block;border-radius:10px;background:var(--track);border:1px solid var(--border)}
+  #chart{height:260px}
+  .calgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+  .calcell{background:var(--track);border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center}
+  .calcell .p{color:var(--sub);font-size:12px;margin-bottom:4px}
+  .calcell input{width:100%;text-align:center;font-variant-numeric:tabular-nums}
+  #log{height:130px;overflow:auto;background:var(--track);border:1px solid var(--border);border-radius:10px;
+    padding:8px;font-family:ui-monospace,Consolas,monospace;font-size:12px;white-space:pre-wrap;color:var(--sub)}
+  .hint{color:var(--sub);font-size:12px;line-height:1.5}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="dot" id="dot"></span>
+    <h1>PS-100 <span style="color:var(--sub);font-weight:500">Tool</span></h1>
+    <span class="status" id="status">未连接</span>
+    <span class="status" id="sn" style="font-weight:600"></span>
+    <span class="chg" id="chg"></span>
+    <span class="spacer"></span>
+    <select id="transport" title="">
+      <option value="ble" selected data-zh="蓝牙 BLE" data-en="Bluetooth">蓝牙 BLE</option>
+      <option value="serial" data-zh="USB 串口" data-en="USB Serial">USB 串口</option>
+    </select>
+    <select id="baud" title=""><option selected>9600</option><option>19200</option><option>38400</option><option>57600</option><option>115200</option></select>
+    <button id="langBtn">EN</button>
+    <button class="primary" id="btnConn">连接</button>
+  </header>
+
+  <div class="tabs">
+    <button id="tab_dash" class="sel" data-zh="仪表盘" data-en="Dashboard">仪表盘</button>
+    <button id="tab_chart" data-zh="实时曲线" data-en="Chart">实时曲线</button>
+    <button id="tab_cal" data-zh="校准" data-en="Calibration">校准</button>
+  </div>
+
+  <!-- 仪表盘 -->
+  <section id="sec_dash">
+    <div class="tiles">
+      <div class="tile" id="t_PWR"><div class="val">—</div><div class="lab" data-zh="功率 (W)" data-en="Power (W)">功率 (W)</div></div>
+      <div class="tile" id="t_SWR"><div class="val">—</div><div class="lab" data-zh="驻波 SWR" data-en="SWR">驻波 SWR</div></div>
+      <div class="tile" id="t_PEP"><div class="val">—</div><div class="lab" data-zh="峰值 (W)" data-en="Peak (W)">峰值 (W)</div></div>
+      <div class="tile" id="t_VBAT"><div class="val">—</div><div class="lab" data-zh="电池 (mV)" data-en="Batt (mV)">电池 (mV)</div></div>
+      <div class="tile wide" id="t_PCT"><div class="val">—</div><div class="lab" data-zh="电量 (%)" data-en="Charge (%)">电量 (%)</div></div>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0" data-zh="功率" data-en="Power">功率</h2>
+        <div class="seg" id="fsSeg"><button data-fs="auto" class="sel" data-zh="自动" data-en="Auto">自动</button><button data-fs="10">10W</button><button data-fs="50">50W</button><button data-fs="100">100W</button></div></div>
+      <div class="barwrap"><div class="bar" id="pbar"></div></div>
+      <h2 style="margin:14px 0 0" data-zh="驻波 SWR" data-en="SWR">驻波 SWR</h2>
+      <div class="scale" id="swrScale"><div class="line"></div><div class="mark" id="swrMark" style="left:0;display:none"></div></div>
+    </div>
+    <div class="card">
+      <h2 data-zh="基本" data-en="Basic">基本</h2>
+      <div class="row">
+        <button onclick="send('VER')" data-zh="VER 版本" data-en="VER (info)">VER 版本</button>
+        <button onclick="send('READ')" data-zh="READ 单次" data-en="READ (once)">READ 单次</button>
+        <button id="btnStream">STREAM 开始</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2 data-zh="设置 (EEPROM)" data-en="Settings (EEPROM)">设置 (EEPROM)</h2>
+      <div class="setgrid">
+        <div class="setitem"><label class="lbl" data-zh="报警 SWR" data-en="Alarm SWR">报警 SWR</label>
+          <div class="ctl"><input type="number" id="alarm" value="3.0" step="0.1" min="1.1" max="9.9"><button id="btnAlarm">SET ALARM</button></div></div>
+        <div class="setitem"><label class="lbl" data-zh="超时(秒)" data-en="Timeout(s)">超时(秒)</label>
+          <div class="ctl"><input type="number" id="kdt" value="60" step="5" min="0" max="255"><button id="btnKdt">SET KDT</button></div></div>
+        <div class="setitem"><label class="lbl" data-zh="自动关机(分)" data-en="Auto-off(min)">自动关机(分)</label>
+          <div class="ctl"><input type="number" id="aoff" value="0" step="5" min="0" max="90"><button id="btnAoff">SET AOFF</button></div></div>
+        <div class="setitem"><label class="lbl" data-zh="显示翻转 Flip" data-en="Display Flip">显示翻转 Flip</label>
+          <div class="ctl"><button id="btnFlip" style="flex:1">正常</button></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 实时曲线 -->
+  <section id="sec_chart" class="hidden">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0" data-zh="实时曲线 (功率/SWR)" data-en="Live Chart (Power/SWR)">实时曲线 (功率/SWR)</h2>
+        <div class="row" style="gap:6px">
+          <div class="seg" id="fsSeg2"><button data-fs="auto" class="sel" data-zh="自动" data-en="Auto">自动</button><button data-fs="10">10W</button><button data-fs="50">50W</button><button data-fs="100">100W</button></div>
+          <button id="btnChartClr" style="padding:6px 10px;font-size:13px" data-zh="清空" data-en="Clear">清空</button>
+        </div></div>
+      <canvas id="chart"></canvas>
+      <p class="hint" data-zh="左轴=功率(蓝线，按量程)，右轴=SWR(橙线)。灰色虚线=峰值(只统计有功率时)。功率偏小就切 10W/50W。"
+         data-en="Left=power (blue, per scale), right=SWR (orange). Gray dashed=peak (TX only). Switch to 10W/50W if power looks small.">左轴=功率(蓝线，按量程)，右轴=SWR(橙线)。灰色虚线=峰值(只统计有功率时)。功率偏小就切 10W/50W。</p>
+    </div>
+  </section>
+
+  <!-- 校准 -->
+  <section id="sec_cal" class="hidden">
+    <div class="card">
+      <h2 data-zh="校准 24 点 (ADC 门限可改)" data-en="Calibration 24-pt (edit ADC)">校准 24 点 (ADC 门限可改)</h2>
+      <div class="row" style="margin-bottom:10px">
+        <button onclick="send('CALDUMP')" data-zh="读取" data-en="Read">读取</button>
+        <button id="btnCalWrite" class="primary" data-zh="写入设备" data-en="Write">写入设备</button>
+        <button id="btnCalValid" data-zh="标记有效" data-en="Mark Valid">标记有效</button>
+        <button id="btnCalClr" data-zh="清除有效" data-en="Clear Valid">清除有效</button>
+        <button id="btnCalSave" data-zh="保存" data-en="Save">保存</button>
+        <button id="btnCalLoad" data-zh="载入" data-en="Load">载入</button>
+        <input type="file" id="calFile" accept=".json" class="hidden">
+      </div>
+      <div class="calgrid" id="calgrid"></div>
+      <p class="hint" id="calStatus" data-zh="提示：先「读取」取回设备 24 点，改 ADC 门限后「写入设备」(会发 CALVALID)。"
+         data-en="Tip: Read to fetch 24 points, edit ADC, then Write (sends CALVALID).">提示：先「读取」取回设备 24 点，改 ADC 门限后「写入设备」(会发 CALVALID)。</p>
+    </div>
+  </section>
+
+  <!-- 日志 -->
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0" data-zh="日志" data-en="Log">日志</h2>
+      <label class="lbl"><input type="checkbox" id="logTele"> <span data-zh="记录遥测" data-en="Log telem">记录遥测</span></label>
+      <button id="btnClear" style="padding:6px 10px;font-size:13px" data-zh="清空" data-en="Clear">清空</button>
+    </div>
+    <div id="log"></div>
+    <div class="row" style="margin-top:8px">
+      <input type="text" id="cmdIn" data-zhph="自定义命令，回车发送" data-enph="Type a command, Enter to send" placeholder="自定义命令，回车发送" style="flex:1;min-width:120px">
+      <button id="btnSend" data-zh="发送" data-en="Send">发送</button>
+    </div>
+    <p class="hint" id="hint"></p>
+  </div>
+
+  <p class="hint" id="privacy" style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px"
+     data-zh="隐私提示：连接设备时，本工具会记录设备与连接信息（设备名 / 序号 / 固件版本 / 浏览器 / 系统 / 网络地址）用于产品支持与质量改进。继续使用即视为同意。"
+     data-en="Privacy: connecting records device & connection info (device name / SN / firmware / browser / OS / network address) for product support and quality improvement. By continuing, you consent.">隐私提示：连接设备时，本工具会记录设备与连接信息（设备名 / 序号 / 固件版本 / 浏览器 / 系统 / 网络地址）用于产品支持与质量改进。继续使用即视为同意。</p>
+</div>
+
+<script>
+"use strict";
+/* ===== PS-100 Web 工具：USB 串口 / 蓝牙双传输；移植 PS100Tool；中英切换；峰值仅统计有功率时段。 */
+const $=id=>document.getElementById(id);
+const CAL_PWR=[5,6,7,8,9,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100];
+let link=null,pollTimer=null,fs=100,autoFs=true,streaming=false,flip=0,calValid=0,alarmTimer=null,lastRx=0,lastInfo="",lastSN="";
+const LOG_ENDPOINT="https://eletoy.pythonanywhere.com/recv_data";  // 接收端(PythonAnywhere)
+const LOG_FETCH_IP=false;  // 建议 false：客户端查IP会多一个可见请求；改由服务器端记录真实IP（Cloudflare 隧道用 CF-Connecting-IP 头）
+const pwrHist=[],swrHist=[],tHist=[],MAXPTS=300;
+
+/* ---------- i18n ---------- */
+let lang=(()=>{ try{return localStorage.getItem("ps100_lang")||"zh";}catch(_){return "zh";} })();
+const tr=(zh,en)=> lang==="zh"?zh:en;
+function applyLang(){
+  document.documentElement.lang = lang==="zh"?"zh":"en";
+  document.querySelectorAll("[data-zh]").forEach(el=>{ el.textContent = lang==="zh"?el.getAttribute("data-zh"):el.getAttribute("data-en"); });
+  document.querySelectorAll("[data-zhph]").forEach(el=>{ el.placeholder = lang==="zh"?el.getAttribute("data-zhph"):el.getAttribute("data-enph"); });
+  $("langBtn").textContent = lang==="zh"?"EN":"中";
+  updateConnUI(); setConnStatus(); $("hint").textContent=buildHint();
+  if(!$("sec_chart").classList.contains("hidden")) drawChart();
+}
+function setLang(l){ lang=l; try{localStorage.setItem("ps100_lang",l);}catch(_){} applyLang(); }
+$("langBtn").onclick=()=> setLang(lang==="zh"?"en":"zh");
+function buildHint(){ const okS=("serial" in navigator),okB=!!navigator.bluetooth;
+  const s=okS?tr("（本机支持）","(supported)"):tr("（不支持）","(not supported)");
+  const b=okB?tr("（本机支持）","(supported)"):tr("（不支持）","(not supported)");
+  return tr("传输：USB 串口需桌面 Chrome/Edge+HTTPS","Transport: USB Serial needs desktop Chrome/Edge + HTTPS")+s
+    +tr("；蓝牙需安卓 Chrome+HTTPS","; Bluetooth needs Android Chrome + HTTPS")+b
+    +tr("。串口默认 9600，模块串口也设 9600 8N1。",". Serial default 9600; set module UART to 9600 8N1 too."); }
+
+/* ---------- 工具 ---------- */
+function log(m,c){const el=$("log");const at=el.scrollTop+el.clientHeight>=el.scrollHeight-4;
+  const d=document.createElement("div");d.textContent="["+new Date().toTimeString().slice(0,8)+"] "+m;
+  if(c==="err")d.style.color="var(--bad)"; if(c==="tx")d.style.color="var(--accent)";
+  el.appendChild(d);while(el.childNodes.length>400)el.removeChild(el.firstChild);if(at)el.scrollTop=el.scrollHeight;}
+function setStatus(t,on){$("status").textContent=t;$("dot").classList.toggle("on",!!on);}
+function setConnStatus(){ setStatus(link?tr("已连接","Connected"):tr("未连接","Offline"), !!link); }
+function setTile(id,v){const t=$("t_"+id);if(t)t.querySelector(".val").textContent=v;}
+function setSN(s){ $("sn").textContent = s ? ("SN: "+s) : ""; if(s) lastSN=s; }
+function swrColor(s){return s<1.5?"var(--good)":(s<3.0?"var(--warn)":"var(--bad)");}
+
+/* ---------- 传输层 ---------- */
+let rxbuf="";
+function onChunk(s){rxbuf+=s;let i;while((i=rxbuf.indexOf("\n"))>=0){
+  const line=rxbuf.slice(0,i).replace(/\r/g,"").trim();rxbuf=rxbuf.slice(i+1);if(line)handleLine(line);}}
+class SerialLink{
+  async connect(baud){ if(!("serial" in navigator)) throw new Error(tr("此浏览器不支持 Web Serial（桌面 Chrome/Edge + HTTPS）。安卓请用蓝牙。","Web Serial not supported (desktop Chrome/Edge + HTTPS). Use Bluetooth on Android."));
+    this.port=await navigator.serial.requestPort(); await this.port.open({baudRate:baud});
+    this.enc=new TextEncoder(); this.dec=new TextDecoder(); this.writer=this.port.writable.getWriter(); this._read(); }
+  async _read(){ this.reader=this.port.readable.getReader();
+    try{for(;;){const{value,done}=await this.reader.read();if(done)break;if(value)onChunk(this.dec.decode(value));}}catch(e){log("serial read end: "+e.message,"err");} }
+  async send(s){ await this.writer.write(this.enc.encode(s)); }
+  async close(){try{await this.reader.cancel();}catch(_){}try{this.writer.releaseLock();}catch(_){}try{await this.port.close();}catch(_){}}
+}
+const BLE_OPT=['6e400001-b5a3-f393-e0a9-e50e24dcca9e',0xffe0,0xfff0,0xffe5,0xff00,0xfee0];
+class BleLink{
+  async connect(){ if(!navigator.bluetooth) throw new Error(tr("此浏览器不支持 Web Bluetooth（安卓 Chrome + HTTPS）。","Web Bluetooth not supported (Android Chrome + HTTPS)."));
+    this.dev=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:BLE_OPT}); this.name=this.dev.name||"";
+    this.dev.addEventListener("gattserverdisconnected",onDisconnect); this.srv=await this.dev.gatt.connect();
+    let nC=null,wC=null,svcs=[];try{svcs=await this.srv.getPrimaryServices();}catch(_){}
+    for(const s of svcs){let cs=[];try{cs=await s.getCharacteristics();}catch(_){continue;}
+      const n=cs.find(c=>c.properties.notify||c.properties.indicate),w=cs.find(c=>c.properties.write||c.properties.writeWithoutResponse);
+      if(n){nC=n;wC=w||wC;break;} if(w&&!wC)wC=w;}
+    if(!nC)throw new Error(tr("未找到可通知特征。","No notify characteristic found.")); this.wC=wC; this.enc=new TextEncoder();
+    await nC.startNotifications();
+    nC.addEventListener("characteristicvaluechanged",e=>{const v=e.target.value;let s="";
+      for(let i=0;i<v.byteLength;i++)s+=String.fromCharCode(v.getUint8(i));onChunk(s);}); }
+  async send(s){ if(!this.wC)return; const d=this.enc.encode(s);
+    for(let i=0;i<d.length;i+=20){const c=d.slice(i,i+20);
+      if(this.wC.properties.writeWithoutResponse)await this.wC.writeValueWithoutResponse(c);else await this.wC.writeValue(c);} }
+  async close(){try{if(this.dev&&this.dev.gatt.connected)this.dev.gatt.disconnect();}catch(_){}}
+}
+
+/* ---------- 行解析 ---------- */
+function handleLine(line){
+  const m=line.match(/(?:SN|UID)[=:]\s*([0-9A-Za-z_\-]+)/i); if(m) setSN(m[1]);
+  if(line.startsWith("PWR=")){ parseTelem(line); if($("logTele").checked) log(line,"rx"); }
+  else if(line.startsWith("ALARM")){ flashAlarm(); log(line,"err"); }
+  else if(line.startsWith("CAL,")){ parseCal(line); log(line,"rx"); }
+  else { if(line.trim()!=="?") lastInfo=line; log(line, line.trim()==="?"?"err":"rx"); }
+}
+function parseTelem(line){
+  lastRx=Date.now();
+  const f={}; line.split(",").forEach(kv=>{const i=kv.indexOf("=");if(i>0)f[kv.slice(0,i)]=kv.slice(i+1);});
+  ["PWR","PEP","VBAT","PCT"].forEach(k=>{if(k in f)setTile(k,f[k]);});
+  if("CHG" in f) $("chg").textContent=f.CHG==="1"?tr("⚡ 充电中","⚡ Charging"):"";
+  const swr=parseFloat(f.SWR);
+  const swrOk=("SWR" in f) && isFinite(swr) && swr>=1.0;   // 有有效驻波才显示，否则只留刻度线
+  const sv=$("t_SWR").querySelector(".val"), mk=$("swrMark");
+  if(swrOk){ sv.textContent=swr.toFixed(2); sv.style.color=swrColor(swr);
+    mk.style.display="block"; mk.style.left=(Math.min(swr,5)-1)/4*100+"%"; mk.style.background=swrColor(swr); }
+  else { sv.textContent="—"; sv.style.color=""; mk.style.display="none"; }
+  const pwr=parseFloat(f.PWR||"0");
+  pwrHist.push(isNaN(pwr)?0:pwr); swrHist.push(swrOk?swr:0); tHist.push(Date.now());
+  if(pwrHist.length>MAXPTS){pwrHist.shift();swrHist.shift();tHist.shift();}
+  recomputeAutoFs(); if(autoFs) highlightFs();
+  if(!isNaN(pwr)) $("pbar").style.width=Math.min(pwr/fs,1)*100+"%";
+  if(!$("sec_chart").classList.contains("hidden")) drawChart();
+}
+function flashAlarm(){ const t=$("t_SWR"); t.classList.add("alarm"); clearTimeout(alarmTimer);
+  alarmTimer=setTimeout(()=>t.classList.remove("alarm"),800); }
+function parseCal(line){
+  const parts=line.split(",");
+  try{ calValid = parts[1].split("=")[1]==="1"?1:0;
+    const vals=parts.slice(2,26).map(x=>parseInt(x,10));
+    vals.forEach((v,i)=>{ if(i<24 && !isNaN(v)) $("cal_"+i).value=v; });
+    $("calStatus").textContent=tr("已从设备读取 24 点。校准有效标志 = ","Read 24 points. Valid flag = ")+calValid;
+  }catch(_){ $("calStatus").textContent=tr("解析 CALDUMP 失败","Failed to parse CALDUMP"); }
+}
+
+/* ---------- 发送 ---------- */
+async function send(cmd){ if(!link){log(tr("未连接","Not connected"),"err");return;}
+  try{ await link.send(cmd+"\r\n"); log(">> "+cmd,"tx"); }catch(e){ log(tr("发送失败: ","Send failed: ")+e.message,"err"); } }
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------- 连接 ---------- */
+async function connect(){
+  const t=$("transport").value;
+  try{ setStatus(tr("连接中…","Connecting…"),false); link=t==="serial"?new SerialLink():new BleLink();
+    await (t==="serial"?link.connect(parseInt($("baud").value,10)):link.connect());
+    streaming=true; updateConnUI(); setConnStatus();
+    await send("VER"); await send("STREAM 1"); await send("READ"); startPoll();
+    setTimeout(recordConnection, 1300);   // 等 VER 回复后记录本次连接
+  }catch(e){ link=null; updateConnUI(); setConnStatus();
+    if(e&&e.name==="NotFoundError")log(tr("已取消选择。","Selection cancelled."),"tx"); else log(tr("连接失败: ","Connect failed: ")+(e&&e.message||e),"err"); }
+}
+function startPoll(){ stopPoll(); pollTimer=setInterval(()=>{ if(link && Date.now()-lastRx>1500) send("READ"); },1000); }
+function stopPoll(){ if(pollTimer){clearInterval(pollTimer);pollTimer=null;} }
+async function disconnect(){ stopPoll(); if(link){try{await link.close();}catch(_){}} onDisconnect(); }
+function onDisconnect(){ stopPoll(); link=null; streaming=false; updateConnUI(); setConnStatus(); setSN("");
+  $("chg").textContent=""; ["PWR","SWR","PEP","VBAT","PCT"].forEach(k=>setTile(k,"—"));
+  $("pbar").style.width="0"; $("swrMark").style.display="none"; $("t_SWR").querySelector(".val").style.color=""; }
+function updateConnUI(){ const conn=!!link;
+  $("btnConn").textContent=conn?tr("断开","Disconnect"):tr("连接","Connect");
+  $("transport").disabled=conn; $("baud").disabled=conn||$("transport").value!=="serial";
+  ["btnStream","btnAlarm","btnKdt","btnFlip","btnAoff","btnSend","btnCalWrite","btnCalValid","btnCalClr"].forEach(id=>$(id).disabled=!conn);
+  document.querySelectorAll("section button[onclick]").forEach(b=>b.disabled=!conn);
+  $("btnStream").textContent=streaming?tr("STREAM 停止","STREAM Stop"):tr("STREAM 开始","STREAM Start");
+  $("btnStream").classList.toggle("sel",streaming);
+  $("btnFlip").textContent=flip?tr("倒置","Inverted"):tr("正常","Normal"); }
+
+/* ---------- 控件 ---------- */
+$("btnConn").onclick=()=>{ link?disconnect():connect(); };
+$("btnStream").onclick=()=>{ streaming=!streaming; updateConnUI(); send("STREAM "+(streaming?1:0)); };
+$("btnAlarm").onclick=()=>{ const v=parseFloat($("alarm").value); if(isNaN(v))return; send("SET ALARM "+Math.max(110,Math.min(990,Math.round(v*100)))); };
+$("btnKdt").onclick=()=>{ const v=parseInt($("kdt").value,10); if(isNaN(v))return; send("SET KDT "+Math.max(0,Math.min(255,v))); };
+$("btnAoff").onclick=()=>{ const v=parseInt($("aoff").value,10); if(isNaN(v))return; send("SET AOFF "+Math.max(0,Math.min(90,v))); };
+$("btnFlip").onclick=()=>{ flip=flip?0:1; updateConnUI(); send("SET FLIP "+flip); };
+$("btnSend").onclick=()=>{ const v=$("cmdIn").value.trim(); if(v){send(v);$("cmdIn").value="";} };
+$("cmdIn").addEventListener("keydown",e=>{if(e.key==="Enter")$("btnSend").click();});
+$("btnClear").onclick=()=>{ $("log").innerHTML=""; };
+
+/* ---------- 量程（自动/手动） ---------- */
+function recomputeAutoFs(){ if(!autoFs)return; let peak=0;
+  for(let i=Math.max(0,pwrHist.length-60);i<pwrHist.length;i++) peak=Math.max(peak,pwrHist[i]);
+  fs = peak<=8?10 : (peak<=45?50:100); }
+function highlightFs(){ document.querySelectorAll("#fsSeg button,#fsSeg2 button").forEach(b=>{
+  const d=b.dataset.fs; b.classList.toggle("sel", d==="auto"?autoFs:(!autoFs && parseInt(d,10)===fs)); }); }
+function selectFs(v){ if(v==="auto"){autoFs=true;} else {autoFs=false; fs=parseInt(v,10);}
+  recomputeAutoFs(); highlightFs(); if(!$("sec_chart").classList.contains("hidden")) drawChart(); }
+["fsSeg","fsSeg2"].forEach(id=>$(id).addEventListener("click",e=>{
+  const b=e.target.closest("button[data-fs]"); if(b) selectFs(b.dataset.fs); }));
+
+/* ---------- 标签切换 ---------- */
+function showTab(name){ ["dash","chart","cal"].forEach(n=>{
+  $("sec_"+n).classList.toggle("hidden",n!==name); $("tab_"+n).classList.toggle("sel",n===name); });
+  if(name==="chart"){ fitChart(); drawChart(); } }
+$("tab_dash").onclick=()=>showTab("dash"); $("tab_chart").onclick=()=>showTab("chart"); $("tab_cal").onclick=()=>showTab("cal");
+
+/* ---------- 实时曲线 ---------- */
+const chart=$("chart"); let cctx;
+function fitChart(){ const r=chart.getBoundingClientRect(),d=window.devicePixelRatio||1;
+  chart.width=Math.round(r.width*d); chart.height=Math.round(r.height*d); cctx=chart.getContext("2d"); }
+function drawChart(){
+  if(!cctx)fitChart(); const W=chart.width,H=chart.height,n=pwrHist.length;
+  cctx.clearRect(0,0,W,H);
+  const css=getComputedStyle(document.body);
+  const cBorder=css.getPropertyValue("--border"),cAcc=css.getPropertyValue("--accent"),cWarn=css.getPropertyValue("--warn"),cSub=css.getPropertyValue("--sub"),
+    cGood=css.getPropertyValue("--good"),cBad=css.getPropertyValue("--bad"),cCard=css.getPropertyValue("--card");
+  const dpr=window.devicePixelRatio||1, fpx=Math.round(11*dpr);
+  const BM=16*dpr, PH=H-BM;
+  cctx.font=fpx+"px sans-serif"; cctx.lineWidth=1;
+  cctx.textAlign="left";
+  for(let k=0;k<=4;k++){ const y=PH-k/4*PH;
+    cctx.strokeStyle=cBorder; cctx.beginPath();cctx.moveTo(0,y);cctx.lineTo(W,y);cctx.stroke();
+    cctx.fillStyle=cAcc; const ty=(k===4)?y+fpx+1:y-3; cctx.fillText(Math.round(fs*k/4)+"W",4,ty); }
+  cctx.textAlign="right"; cctx.fillStyle=cWarn; cctx.strokeStyle=cWarn;
+  [1.5,2,3].forEach(s=>{ const y=PH-(s-1)/4*PH; cctx.beginPath();cctx.moveTo(W-9,y);cctx.lineTo(W,y);cctx.stroke();
+    cctx.fillText("SWR "+s, W-11, y-3); });
+  cctx.textAlign="left";
+  const xs=i=>i/(MAXPTS-1)*W;
+  // 峰值保持虚线：只统计有功率(>0.05W)的采样；全空闲则不画
+  { let pk=0,has=false; for(let i=0;i<n;i++){const p=pwrHist[i]; if(p>0.05){has=true; if(p>pk)pk=p;}}
+    if(has){ const y=PH-Math.min(pk/fs,1)*PH;
+      cctx.save(); cctx.strokeStyle=cSub; cctx.lineWidth=Math.max(1,dpr); cctx.setLineDash([6*dpr,5*dpr]);
+      cctx.beginPath();cctx.moveTo(0,y);cctx.lineTo(W,y);cctx.stroke(); cctx.restore();
+      cctx.fillStyle=cAcc; cctx.font=fpx+"px sans-serif"; cctx.textAlign="left";
+      cctx.fillText(tr("峰值","Peak")+" "+pk.toFixed(1)+"W", 40*dpr, Math.max(fpx+1,y-3)); } }
+  // 当前读数（右上角）
+  if(n>=1){ const lp=pwrHist[n-1], ls=swrHist[n-1];
+    const f1=lp.toFixed(1)+" W", f2="SWR "+(ls>=1?ls.toFixed(2):"—");
+    cctx.font="bold "+Math.round(15*dpr)+"px sans-serif";
+    const bw=Math.max(cctx.measureText(f1).width,cctx.measureText(f2).width)+16*dpr, bh=46*dpr, bx=W-bw-6*dpr, by=6*dpr;
+    cctx.globalAlpha=0.85; cctx.fillStyle=cCard; cctx.fillRect(bx,by,bw,bh); cctx.globalAlpha=1;
+    cctx.strokeStyle=cBorder; cctx.lineWidth=1; cctx.strokeRect(bx,by,bw,bh);
+    cctx.textAlign="right";
+    cctx.fillStyle=cAcc; cctx.fillText(f1, W-12*dpr, by+19*dpr);
+    cctx.fillStyle=ls<1.5?cGood:(ls<3?cWarn:cBad); cctx.fillText(f2, W-12*dpr, by+39*dpr);
+    cctx.textAlign="left"; }
+  // 时间轴（底部，右端=最新=0s）
+  if(n>=2){ const tN=tHist[n-1], leftX=(MAXPTS-n)/(MAXPTS-1)*W;
+    const rel=t=>"-"+Math.max(0,Math.round((tN-t)/1000))+"s";
+    cctx.fillStyle=cSub; cctx.font=Math.round(10*dpr)+"px sans-serif";
+    cctx.textAlign="left";   cctx.fillText(rel(tHist[0]), leftX+2, H-4*dpr);
+    cctx.textAlign="center"; cctx.fillText(rel(tHist[Math.floor(n/2)]), (leftX+W)/2, H-4*dpr);
+    cctx.textAlign="right";  cctx.fillText("0s", W-2, H-4*dpr); cctx.textAlign="left"; }
+  if(n<2)return;
+  cctx.strokeStyle=cAcc; cctx.lineWidth=2*dpr; cctx.beginPath();
+  for(let i=0;i<n;i++){const y=PH-Math.min(pwrHist[i]/fs,1)*PH;const x=xs(i+MAXPTS-n);i?cctx.lineTo(x,y):cctx.moveTo(x,y);} cctx.stroke();
+  cctx.strokeStyle=cWarn; cctx.lineWidth=2*dpr; cctx.beginPath();
+  for(let i=0;i<n;i++){const s=Math.min(Math.max(swrHist[i],1),5);const y=PH-(s-1)/4*PH;const x=xs(i+MAXPTS-n);i?cctx.lineTo(x,y):cctx.moveTo(x,y);} cctx.stroke();
+}
+$("btnChartClr").onclick=()=>{ pwrHist.length=0; swrHist.length=0; tHist.length=0; drawChart(); };
+window.addEventListener("resize",()=>{ if(!$("sec_chart").classList.contains("hidden")){fitChart();drawChart();} });
+
+/* ---------- 校准 ---------- */
+const grid=$("calgrid");
+CAL_PWR.forEach((p,i)=>{ const c=document.createElement("div"); c.className="calcell";
+  c.innerHTML='<div class="p">'+i+' · '+p+'W</div><input type="number" id="cal_'+i+'" min="0" max="4095" value="0">'; grid.appendChild(c); });
+function calVals(){ return CAL_PWR.map((_,i)=>{ let v=parseInt($("cal_"+i).value,10); return isNaN(v)?0:Math.max(0,Math.min(4095,v)); }); }
+$("btnCalWrite").onclick=async()=>{ if(!link)return;
+  if(!confirm(tr("把表中 24 点写入设备并标记有效?（会覆盖设备当前校准）","Write all 24 points and mark valid? (overwrites current calibration)")))return;
+  const vals=calVals(); for(let i=0;i<24;i++){ await send("CALSET "+i+" "+vals[i]); await sleep(60); }
+  await send("CALVALID"); $("calStatus").textContent=tr("已写入 24 点并发送 CALVALID。","Wrote 24 points and sent CALVALID."); };
+$("btnCalValid").onclick=()=>{ if(confirm(tr("标记当前设备校准为有效?","Mark device calibration as valid?"))) send("CALVALID"); };
+$("btnCalClr").onclick=()=>{ if(confirm(tr("清除设备校准有效标志?","Clear device calibration-valid flag?"))) send("CALCLR"); };
+$("btnCalSave").onclick=()=>{ const data={device:"PS-100",valid:calValid,pwr:CAL_PWR,adc:calVals()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="ps100_cal.json"; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000); $("calStatus").textContent=tr("已导出 ps100_cal.json","Exported ps100_cal.json"); };
+$("btnCalLoad").onclick=()=>$("calFile").click();
+$("calFile").onchange=e=>{ const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!Array.isArray(d.adc)||d.adc.length!==24)throw 0;
+    d.adc.forEach((v,i)=>$("cal_"+i).value=parseInt(v,10)||0);
+    $("calStatus").textContent=tr("已从文件载入 24 点。点「写入设备」生效。","Loaded 24 points. Tap Write to apply."); }
+    catch(_){ $("calStatus").textContent=tr("载入失败：文件格式不符。","Load failed: bad file format."); } };
+  r.readAsText(f); e.target.value=""; };
+
+/* SWR 刻度标尺 */
+(function(){const sc=$("swrScale");[[1,"1"],[1.5,"1.5"],[2,"2"],[3,"3"],[5,"5"]].forEach(([v,t])=>{
+  const d=document.createElement("div");d.className="tick";d.style.left=((v-1)/4*100)+"%";d.textContent=t;sc.appendChild(d);});})();
+
+/* ---------- 连接上报（仅静默发送服务器；本机不留存/不显示） ---------- */
+async function recordConnection(){
+  if(!LOG_ENDPOINT) return;
+  const rec={ t:new Date().toISOString(), tp:$("transport").value,
+    dev:(link&&link.name)||"", sn:lastSN||"", fw:lastInfo||"",
+    ua:navigator.userAgent, os:navigator.platform||"", lang:navigator.language||"",
+    scr:(screen.width+"x"+screen.height) };
+  if(LOG_FETCH_IP){ try{ const r=await fetch("https://api.ipify.org?format=json"); rec.ip=(await r.json()).ip; }catch(_){} }
+  try{ fetch(LOG_ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(rec)}); }catch(_){}
+}
+
+/* ---------- 初始化 ---------- */
+function syncBaud(){ $("baud").disabled=($("transport").value!=="serial"); }
+$("transport").addEventListener("change",syncBaud);
+applyLang(); syncBaud();
+</script>
+</body>
+</html>
