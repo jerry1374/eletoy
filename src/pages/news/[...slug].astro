@@ -1,0 +1,35 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const items = await getCollection('news');
+  return items.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data.date;
+const dateStr = d
+  ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  : undefined;
+const title = entry.data.title ?? entry.id;
+---
+<Base title={title} description={entry.data.summary}>
+  <article class="entry">
+    <div class="entry-head">
+      <div class="entry-meta">
+        <span class="readout">News</span>
+        {dateStr && <span class="readout">{dateStr}</span>}
+      </div>
+      <h1>{title}</h1>
+    </div>
+    {entry.data.cover && (
+      <div class="cover"><img src={entry.data.cover} alt={title} /></div>
+    )}
+    <div class="prose">
+      <Content />
+    </div>
+    <a class="back" href="/news/">← 返回 News</a>
+  </article>
+</Base>

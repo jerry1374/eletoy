@@ -1,0 +1,16 @@
+---
+const path = Astro.url.pathname;
+const isNews = path.startsWith('/news');
+const isProducts = path.startsWith('/products');
+const isHome = path === '/' || path === '';
+---
+<header class="site-header">
+  <div class="bar">
+    <a href="/" class="brand"><span class="dot">E</span>ELETOY</a>
+    <nav class="nav" aria-label="主导航">
+      <a href="/" aria-current={isHome ? 'page' : undefined}>Home</a>
+      <a href="/news/" aria-current={isNews ? 'page' : undefined}>News</a>
+      <a href="/products/" aria-current={isProducts ? 'page' : undefined}>Products</a>
+    </nav>
+  </div>
+</header>

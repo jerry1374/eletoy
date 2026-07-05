@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+import EntryCard from '../components/EntryCard.astro';
+import { getCollection } from 'astro:content';
+
+function byDateDesc(a, b) {
+  const da = a.data.date ? a.data.date.getTime() : 0;
+  const db = b.data.date ? b.data.date.getTime() : 0;
+  return db - da;
+}
+
+const news = (await getCollection('news'))
+  .filter((e) => !e.data.draft)
+  .sort(byDateDesc)
+  .slice(0, 3);
+
+const products = (await getCollection('products'))
+  .filter((e) => !e.data.draft)
+  .sort(byDateDesc)
+  .slice(0, 6);
+---
+<Base>
+  <section class="hero">
+    <span class="readout">ELETOY · Amateur Radio Gear</span>
+    <h1>Welcome to my electronic toy website!</h1>
+    <p>业余无线电与嵌入式电子产品。产品资料、使用手册和最新动态都在下面，也可以到 News 和 Products 页面查看全部。</p>
+  </section>
+
+  <div class="section-label">
+    <h2>Products</h2>
+    <span class="rule"></span>
+    <a href="/products/">全部产品 →</a>
+  </div>
+  {products.length ? (
+    <div class="grid">
+      {products.map((e) => (
+        <EntryCard
+          href={`/products/${e.id}/`}
+          title={e.data.title ?? e.id}
+          date={e.data.date}
+          cover={e.data.cover}
+          summary={e.data.summary}
+          tag={e.data.model ?? 'Product'}
+        />
+      ))}
+    </div>
+  ) : (
+    <div class="empty">还没有产品，去 Pages CMS 里发布第一篇吧。</div>
+  )}
+
+  <div class="section-label">
+    <h2>News</h2>
+    <span class="rule"></span>
+    <a href="/news/">全部新闻 →</a>
+  </div>
+  {news.length ? (
+    <div class="grid">
+      {news.map((e) => (
+        <EntryCard
+          href={`/news/${e.id}/`}
+          title={e.data.title ?? e.id}
+          date={e.data.date}
+          cover={e.data.cover}
+          summary={e.data.summary}
+          tag="News"
+        />
+      ))}
+    </div>
+  ) : (
+    <div class="empty">还没有新闻。</div>
+  )}
+</Base>
