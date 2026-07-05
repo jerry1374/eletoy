@@ -1,6 +1,6 @@
 ---
 title: USB2RIG V2 is for HAM data communication.
-image: /images/111.png
+image: /images/111-1.png
 ---
 **Specifications:**
 
